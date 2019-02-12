@@ -30,7 +30,7 @@
   {:will-mount (fn [{*day ::day *month ::month *year ::year :as state}]
                  (let [now (time/now)
                        year (time/year now)
-                       [start-year end-year _ change init-opts] (:rum/args state)]
+                       [start-year end-year change init-opts] (:rum/args state)]
                    (reset! *year (get init-opts :year year))
                    (reset! *month (get init-opts :month (time/month now)))
                    (reset! *day (get init-opts :day (time/day now)))
@@ -41,7 +41,7 @@
    :did-update (fn [{notify-change ::notify-change :as state}]
                  (notify-change)
                  state)}
-  [{*day ::day *month ::month *year ::year :as state} start-year end-year label change]
+  [{*day ::day *month ::month *year ::year :as state} start-year end-year change]
   (let [last-day-of-month (time/day (time/last-day-of-the-month @*year @*month))
         days (range 1 (inc last-day-of-month))
         on-change (fn [*k]
@@ -51,22 +51,39 @@
                         (when (< new-last-day-of-month @*day)
                           (reset! *day 1)))))
         field (fn [range-coll *k]
-                [:div.field
-                 [:div.control
-                  [:div.select
-                   [:select {:value @*k :on-change (on-change *k)}
-                    (map-indexed (fn [i x] [:option {:key i} x]) range-coll)]]]])]
-    [:div.field.is-horizontal
-     [:div.field-label.is-normal
-      [:label.label label]]
-     [:div.field-body
-      (field (::years state) *year)
-      (field (::months state) *month)
-      (field days *day)]]))
+                [:div.control {:key (str range-coll)}
+                 [:div.select
+                  [:select {:value @*k :on-change (on-change *k)}
+                   (map-indexed (fn [i x] [:option {:key i} x]) range-coll)]]])]
+    [(field (::years state) *year)
+     (field (::months state) *month)
+     (field days *day)]
+    ))
+
+
+(rum/defcs ContributionForm
+  < (rum/local (initial-date) ::date) (rum/local "" ::amount) (rum/local "" ::note)
+  [{*date ::date *amount ::amount *note ::note} deposit]
+  [:div.field.is-grouped.is-grouped-centered.is-grouped-multiline
+   (DateCapture first-tfsa-year (time/year (time/now)) #(reset! *date %) @*date)
+   [:div.control
+    [:input.input {:type "number" :placeholder "Deposit Amount" :value @*amount
+                   :on-change #(reset! *amount (max 0 (js/parseFloat (.. % -target -value))))}]]
+   [:div.control
+    [:input.input {:type "text" :placeholder "Note" :value @*note
+                   :on-change #(reset! *note (.. % -target -value))}]]
+   [:div.control
+    [:a.button.is-primary
+     {:on-click #(deposit (assoc @*date
+                                 :amount @*amount
+                                 :note @*note))
+      :disabled (not (number? @*amount))}
+     "Deposit"]]
+   ])
 
 
 (rum/defc App < rum/reactive [r]
-  [:div (DateCapture first-tfsa-year (time/year (time/now)) "Date" prn (initial-date))])
+  [:div (ContributionForm prn)])
 
 
 (defonce reconciler
