@@ -14,6 +14,9 @@
 (defmethod person :change [_ [person]]
   {:state person})
 
+(defmethod person :add-person [_ [person]]
+  {:state person})
+
 
 (def initial-people #{initial-person "test"})
 
@@ -22,16 +25,31 @@
 (defmethod people :init []
   {:state initial-people})
 
-(defmethod people :add [_ [person] state]
+(defmethod people :add-person [_ [person] state]
   {:state (conj state person)})
 
+
+(defmulti adding-person? (fn [event] event))
+
+(defmethod adding-person? :init []
+  {:state false})
+
+(defmethod adding-person? :adding-person/show []
+  {:state true})
+
+(defmethod adding-person? :adding-person/hide []
+  {:state false})
+
+(defmethod adding-person? :add-person []
+  {:state false})
 
 (defonce reconciler
   (citrus/reconciler
    {:state (atom {})
     :controllers
     {:person person
-     :people people}
+     :people people
+     :adding-person? adding-person?}
     :effect-handlers {}}))
 
 
@@ -43,6 +61,8 @@
 (defn selected-person [r] (citrus/subscription r [:person]))
 
 (defn all-people [r] (citrus/subscription r [:people]))
+
+(defn show-adding-person? [r] (citrus/subscription r [:adding-person?]))
 
 ;;;; VIEW
 
@@ -127,27 +147,55 @@
 
 
 (rum/defc PersonSelector < rum/static
-  [people selected-person f]
+  [people selected-person select-person add-person]
   [:div.buttons.is-centered
-   (map (fn [person]
-          [:button.button
-           {:key person
-            :class (when (= person selected-person) "is-primary")
-            :on-click #(f person)}
-           person])
-        people)])
+   (let [people-buttons
+         (vec
+          (map (fn [person]
+                 [:button.button
+                  {:key person
+                   :class (when (= person selected-person) "is-primary")
+                   :on-click #(select-person person)}
+                  person])
+               people))]
+     (into people-buttons
+           [[:a.button
+             {:on-click #(add-person)}
+             [:span.icon.is-small
+              [:i.fas.fa-plus]]]]))])
 
 
 (defn PersonSelectorContainer [r]
   (PersonSelector
    (rum/react (all-people r))
    (rum/react (selected-person r))
-   #(citrus/dispatch! r :person :change %)))
+   #(citrus/dispatch! r :person :change %)
+   #(citrus/dispatch! r :adding-person? :adding-person/show)))
+
+
+(rum/defcs AddPerson < (rum/local "" ::person)
+  [{*person ::person} f]
+  [:div.field.has-addons.has-addons-centered
+   [:div.control
+    [:input.input {:type "text" :on-change #(reset! *person (.. % -target -value)) :value @*person}]]
+   [:div.control
+    [:button.button.is-primary
+     {:on-click (fn []
+                  (f @*person)
+                  (reset! *person ""))}
+     "Add Person"]]])
+
+
+(defn AddPersonContainer [r]
+  (AddPerson
+   #(citrus/broadcast! r :add-person %)))
 
 
 (rum/defc App < rum/reactive [r]
   [:div
    (PersonSelectorContainer r)
+   (when (true? (rum/react (show-adding-person? r)))
+     (AddPersonContainer r))
    (ContributionForm prn)])
 
 (rum/mount (App reconciler) (. js/document (getElementById "app")))
