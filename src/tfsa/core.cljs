@@ -3,6 +3,50 @@
             [citrus.core :as citrus]
             [cljs-time.core :as time]))
 
+
+(def initial-person "You")
+
+(defmulti person (fn [event] event))
+
+(defmethod person :init []
+  {:state initial-person})
+
+(defmethod person :change [_ [person]]
+  {:state person})
+
+
+(def initial-people #{initial-person "test"})
+
+(defmulti people (fn [event] event))
+
+(defmethod people :init []
+  {:state initial-people})
+
+(defmethod people :add [_ [person] state]
+  {:state (conj state person)})
+
+
+(defonce reconciler
+  (citrus/reconciler
+   {:state (atom {})
+    :controllers
+    {:person person
+     :people people}
+    :effect-handlers {}}))
+
+
+(defonce init-ctrl (citrus/broadcast-sync! reconciler :init))
+
+
+;;;; SUBSCRIPTIONS
+
+(defn selected-person [r] (citrus/subscription r [:person]))
+
+(defn all-people [r] (citrus/subscription r [:people]))
+
+;;;; VIEW
+
+
 (def first-tfsa-year 2016)
 
 
@@ -82,17 +126,28 @@
    ])
 
 
+(rum/defc PersonSelector < rum/static
+  [people selected-person f]
+  [:div.buttons.is-centered
+   (map (fn [person]
+          [:button.button
+           {:key person
+            :class (when (= person selected-person) "is-primary")
+            :on-click #(f person)}
+           person])
+        people)])
+
+
+(defn PersonSelectorContainer [r]
+  (PersonSelector
+   (rum/react (all-people r))
+   (rum/react (selected-person r))
+   #(citrus/dispatch! r :person :change %)))
+
+
 (rum/defc App < rum/reactive [r]
-  [:div (ContributionForm prn)])
-
-
-(defonce reconciler
-  (citrus/reconciler
-   {:state (atom {})
-    :controllers {}
-    :effect-handlers {}}))
-
-
-(defonce init-ctrl (citrus/broadcast-sync! reconciler :init))
+  [:div
+   (PersonSelectorContainer r)
+   (ContributionForm prn)])
 
 (rum/mount (App reconciler) (. js/document (getElementById "app")))
