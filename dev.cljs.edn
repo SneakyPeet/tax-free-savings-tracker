@@ -1,1 +1,3 @@
-{:main tfsa.core}
+{:modules {:vendor {:entries #{rum.core citrus.core}}
+           :main {:entries #{tfsa.core}
+                  :depends-on [:vendor]}}}
