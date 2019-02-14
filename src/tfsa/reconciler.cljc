@@ -3,7 +3,8 @@
             [tfsa.app-state :as app-state]
             [tfsa.domain :as domain]))
 
-(defonce reconciler
+
+(defn make []
   (citrus/reconciler
    {:state (atom {})
     :controllers
@@ -11,3 +12,12 @@
      :people domain/people
      :adding-person? app-state/adding-person?}
     :effect-handlers {}}))
+
+
+(defn init [r] (citrus/broadcast-sync! r :init))
+
+
+(defn make-init []
+  (let [r (make)]
+    (init r)
+    r))

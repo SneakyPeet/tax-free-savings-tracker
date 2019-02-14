@@ -1,3 +1,4 @@
 {:log-syntax-error-style :concise
- :watch-dirs ["src"]
- :css-dirs ["resources/public/css"]}
+ :watch-dirs ["src" "test"]
+ :css-dirs ["resources/public/css"]
+ :auto-testing true}

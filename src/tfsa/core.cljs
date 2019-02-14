@@ -1,10 +1,9 @@
 (ns tfsa.core
   (:require [rum.core :as rum]
             [citrus.core :as citrus]
-            [tfsa.reconciler :refer [reconciler]]
+            [tfsa.reconciler :as reconciler]
             [tfsa.components :refer [App]]))
 
-
-(defonce init-ctrl (citrus/broadcast-sync! reconciler :init))
-
-(rum/mount (App reconciler) (. js/document (getElementById "app")))
+(defonce r (reconciler/make))
+(defonce init-ctrl (reconciler/init r))
+(rum/mount (App r) (. js/document (getElementById "app")))
