@@ -10,7 +10,8 @@
     :controllers
     {:person domain/person
      :people domain/people
-     :adding-person? app-state/adding-person?}
+     :adding-person? app-state/adding-person?
+     :deposit-details app-state/deposit-details}
     :effect-handlers {}}))
 
 
