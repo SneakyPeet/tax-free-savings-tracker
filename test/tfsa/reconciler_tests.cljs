@@ -1,7 +1,6 @@
 (ns tfsa.reconciler-tests
   (:require [tfsa.reconciler :as sut]
-            #?(:clj [clojure.test :as t]
-               :cljs [cljs.test :as t :include-macros true])
+            [cljs.test :as t :include-macros true]
             [citrus.core :as citrus]))
 
 

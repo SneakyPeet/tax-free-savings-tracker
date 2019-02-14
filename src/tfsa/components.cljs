@@ -38,7 +38,7 @@
 
 ;;;; ADD PERSON
 
-(rum/defcs AddPerson < (rum/local "" ::person)
+(rum/defcs AddPerson < rum/static (rum/local "" ::person)
   [{*person ::person} f]
   [:div.field.has-addons.has-addons-centered
    [:div.control
@@ -60,7 +60,7 @@
 
 (def months (zipmap (range 1 13) ["Jan" "Feb" "Mrt" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"]))
 
-(rum/defcs DepositForm <
+(rum/defcs DepositForm < rum/static
   {:will-mount (fn [state]
                  (let [now (time/now)
                        start-year conf/first-tfsa-year
@@ -124,7 +124,8 @@
    (rum/react (app-state/can-deposit? r))
    #(citrus/dispatch! r :deposit-details :deposit/set-field %1 %2)
    (fn [deposit]
-     (citrus/dispatch! r :deposit-details :deposit/clear))))
+     (citrus/dispatch! r :deposit-details :deposit/clear)
+     (citrus/dispatch! r :deposits :deposit/add (random-uuid) @(domain/selected-person r) deposit))))
 
 
 ;;;; LAYOUT
@@ -134,4 +135,7 @@
    (PersonSelectorContainer r)
    (when (true? (rum/react (app-state/show-adding-person? r)))
      (AddPersonContainer r))
-   (DepositFormContainer r)])
+   (DepositFormContainer r)
+   [:ul (map-indexed
+          (fn [i d] [:li {:key i} (str d)])
+          (rum/react (domain/deposits-for-person r (rum/react (domain/selected-person r)))))]])
