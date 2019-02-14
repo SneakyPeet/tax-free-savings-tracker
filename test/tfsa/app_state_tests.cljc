@@ -1,7 +1,8 @@
 (ns tfsa.app-state-tests
   (:require [tfsa.app-state :as sut]
             #?(:clj [clojure.test :as t]
-               :cljs [cljs.test :as t :include-macros true])))
+               :cljs [cljs.test :as t :include-macros true])
+            [tfsa.reconciler :as reconciler]))
 
 
 (t/deftest adding-person?-controller
@@ -14,3 +15,8 @@
   (t/testing ":person/add should return false"
     (t/is (= {:state false} (sut/adding-person? :person/add "Piet"))))
   )
+
+
+(t/deftest show-adding-person?
+  (let [state (reconciler/make-init)]
+    (t/is (= false @(sut/show-adding-person? state)))))
