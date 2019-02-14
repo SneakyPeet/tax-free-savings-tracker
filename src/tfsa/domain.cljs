@@ -61,3 +61,9 @@
                        vals
                        (group-by :person))]
        (get people person [])))))
+
+
+(defn lifetime-contributions [deposits]
+  (->> deposits
+       (map :amount)
+       (reduce + 0)))

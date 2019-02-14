@@ -61,3 +61,8 @@
       (t/is (= [] @(sut/deposits-for-person state "Foo"))))
     (t/testing "all deposits for person should return"
       (t/is (= expected @(sut/deposits-for-person state person))))))
+
+
+(t/deftest lifetime-contributions
+  (let [deposits [{:amount 10} {:amount 15} {:amount 25}]]
+    (t/is (= 50 (sut/lifetime-contributions deposits)))))
