@@ -45,6 +45,9 @@
 ;;;; ADD PERSON
 
 (rum/defcs AddPerson < rum/static (rum/local "" ::person)
+  {:did-mount (fn [s]
+                (.focus (js/document.getElementById "add-person"))
+                s)}
   [{*person ::person} f close]
   [:div.modal.is-active
    [:div.modal-background]
@@ -55,7 +58,8 @@
                       (reset! *person ""))}
      [:div.field.has-addons.has-addons-centered
       [:div.control
-       [:input.input {:type "text" :on-change #(reset! *person (.. % -target -value))
+       [:input.input {:id "add-person"
+                      :type "text" :on-change #(reset! *person (.. % -target -value))
                       :placeholder "Name" :value @*person}]]
       [:div.control
        [:button.button.is-primary
