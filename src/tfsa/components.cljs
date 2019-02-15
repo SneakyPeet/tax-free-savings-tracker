@@ -306,10 +306,16 @@
       [:div.hero-head
        [:nav.navbar
         [:div.container
-         [:div.navbar-menu
-          [:div.navbar-end
-           [:a.navbar-item {:target "_blank" :href "https://github.com/SneakyPeet/tax-free-savings-tracker"}
-            [:span.icon [:i.fab.fa-github]]]]]]]]
+         [:div.navbar-end.has-text-right
+          [:a.navbar-item {:on-click #(js/alert "TODO") :style {:display "inline-block"}}
+           [:span.icon [:i.fas.fa-save]]]
+          [:a.navbar-item {:on-click #(js/alert "TODO") :style {:display "inline-block"}}
+           [:span.icon [:i.fas.fa-upload]]]
+          [:a.navbar-item {:on-click #(js/alert "TODO") :style {:display "inline-block"}}
+           [:span.icon [:i.fas.fa-question-circle]]]
+          [:a.navbar-item {:style {:display "inline-block"}
+                           :target "_blank" :href "https://github.com/SneakyPeet/tax-free-savings-tracker"}
+           [:span.icon [:i.fab.fa-github]]]]]]]
       [:div.hero-body
        [:div.container
         [:h1.title "Tax Free Savings Tracker"]]]
@@ -324,4 +330,16 @@
        (DepositFormContainer r)
        (when deposits? (TaxYearTable deposits-by-tax-year current-tax-year))
        (when deposits? (DepositTableContainer r deposits))
-       (when (> (count people) 1) (RemovePersonContainer r))]]]))
+       (when (> (count people) 1) (RemovePersonContainer r))]]
+     [:div.section
+      [:ul
+       [:li [:strong "TODO"]]
+       [:li "Save CSV"]
+       [:li "LOAD CSV"]
+       [:li "SAVE Local"]
+       [:li "Read Me"]
+       [:li "Made By"]
+       [:li "Disclaimer"]
+       [:li "Turn appstate on and off clearning and saving as you switch"]
+       [:li "Deploy"]
+       [:li "Add GA events"]]]]))
