@@ -136,22 +136,46 @@
 
 ;;;; LAYOUT
 
+(rum/defc welcome-message < rum/static
+  [people selected-person deposits]
+  (let [new-user? (and (= 1 (count people)) (empty? deposits))
+        new-person? (empty? deposits)
+        single-deposit? (= 1 (count deposits))]
+    (cond
+      new-user?
+      [:div.notification.is-primary.has-text-centered
+       [:h1.title "Welcome To TFSA Tracker"]
+       [:h2.subtitle "To get started, add YOUR tax free savings account contributions"]]
+      new-person?
+      [:div.notification.is-primary.has-text-centered
+       [:h2.subtitle "Add some contributions to the the tax free savings that are in " selected-person "'s name"]]
+      single-deposit?
+      [:div.notification.is-info.has-text-centered
+       [:h1.title "Good Job"]
+       [:h2.subtitle "Remember to add all the deposits you have made to all your tax free saving accounts"]]
+      :else nil)))
+
+
 (rum/defc App < rum/reactive [r]
-  [:div
-   [:section.hero.is-primary
-    [:div.hero-head]
-    [:div.hero-body
-     [:div.container
-      [:h1.title "Tax Free Savings Tracker"]]]
-    [:div.hero-foot
-     (PersonSelectorContainer r)]]
-   [:div.section
-    [:div.container
-     (DepositFormContainer r)
+  (let [selected-person (rum/react (domain/selected-person r))
+        people (rum/react (domain/all-people r))
+        deposits (rum/react (domain/deposits-for-person r selected-person))]
+    [:div
+     [:section.hero.is-primary
+      [:div.hero-head]
+      [:div.hero-body
+       [:div.container
+        [:h1.title "Tax Free Savings Tracker"]]]
+      [:div.hero-foot
+       (PersonSelectorContainer r)]]
+     [:div.section
+      [:div.container
+       (welcome-message people selected-person deposits)
+       (DepositFormContainer r)
 
-     (when (true? (rum/react (app-state/show-adding-person? r)))
-       (AddPersonContainer r))
+       (when (true? (rum/react (app-state/show-adding-person? r)))
+         (AddPersonContainer r))
 
-     [:ul (map-indexed
-           (fn [i d] [:li {:key i} (str d)])
-           (rum/react (domain/deposits-for-person r (rum/react (domain/selected-person r)))))]]]])
+       [:ul (map-indexed
+             (fn [i d] [:li {:key i} (str d)])
+             (rum/react (domain/deposits-for-person r (rum/react (domain/selected-person r)))))]]]]))

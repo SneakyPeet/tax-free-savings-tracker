@@ -31,7 +31,7 @@
 
 ;;;; PEOPLE
 
-(def initial-people #{initial-person "test"})
+(def initial-people #{initial-person})
 
 (defmulti people (fn [event] event))
 
