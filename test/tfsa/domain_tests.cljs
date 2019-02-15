@@ -64,7 +64,11 @@
                                       :person person
                                       :tax-year 2017
                                       :timestamp (.getTime (time/date-time 2018 1 11)))}]
-      (t/is (= {:state expected} (sut/deposits :deposit/add [deposit-id person deposit] sut/initial-deposits))))))
+      (t/is (= {:state expected} (sut/deposits :deposit/add [deposit-id person deposit] sut/initial-deposits)))))
+  (t/testing ":deposit/remove should remove the deposit"
+    (let [deposits {"1" {} "2" {} "3" {}}
+          expected {"2" {} "3" {}}]
+      (t/is (= {:state expected} (sut/deposits :deposit/remove ["1"] deposits))))))
 
 
 (t/deftest deposits-for-person

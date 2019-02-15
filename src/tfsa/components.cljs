@@ -241,7 +241,7 @@
 (defn DepositTableContainer [r deposits]
   (DepositTable
    deposits
-   prn))
+   #(citrus/dispatch! r :deposits :deposit/remove %)))
 
 
 (rum/defc AllowedContributions < rum/static

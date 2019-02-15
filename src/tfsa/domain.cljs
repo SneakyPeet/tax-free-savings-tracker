@@ -69,6 +69,10 @@
                        :timestamp (.getTime (time/date-time year month day)))]
     {:state (assoc state deposit-id deposit)}))
 
+(defmethod deposits :deposit/remove
+  [_ [deposit-id] state]
+  {:state (dissoc state deposit-id)})
+
 (defmethod deposits :person/add
   [_ [person] state]
   {:state state})
