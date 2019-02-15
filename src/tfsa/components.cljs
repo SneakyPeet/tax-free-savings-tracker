@@ -74,6 +74,22 @@
    #(citrus/dispatch! r :adding-person? :adding-person/hide)))
 
 
+(rum/defc RemovePerson < rum/static
+  [selected-person f]
+ [:div.has-text-centered
+  [:button.button.is-danger.is-small.is-outlined
+   {:on-click #(let [delete? (js/confirm (str "Are you sure you want to delete " selected-person))]
+                 (when delete? (f)))}
+   [:span "Delete This Person"]
+   [:span.icon.is-small
+    [:i.fas.fa-times]]]])
+
+(defn RemovePersonContainer [r]
+  (RemovePerson
+   (rum/react (domain/selected-person r))
+   #(js/alert "whoop")))
+
+
 ;;;; DEPOSIT FORM
 
 (def months (zipmap (range 1 13) ["Jan" "Feb" "Mrt" "Apr" "May" "Jun" "Jul" "Aug" "Sep" "Oct" "Nov" "Dec"]))
@@ -281,4 +297,5 @@
        (when deposits? (AllowedContributions deposits deposits-by-tax-year current-tax-year))
        (DepositFormContainer r)
        (when deposits? (TaxYearTable deposits-by-tax-year current-tax-year))
-       (when deposits? (DepositTable deposits))]]]))
+       (when deposits? (DepositTable deposits))
+       (when (> (count people) 2) (RemovePersonContainer r))]]]))
