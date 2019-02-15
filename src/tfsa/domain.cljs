@@ -1,5 +1,15 @@
 (ns tfsa.domain
-  (:require [citrus.core :as citrus]))
+  (:require [citrus.core :as citrus]
+            [cljs-time.core :as time]))
+
+
+;;;; TAX YEAR
+
+(defn calculate-tax-year
+  [{:keys [year month day]}]
+  (if (time/after? (time/date-time year month day) (time/last-day-of-the-month year 2))
+    year
+    (dec year)))
 
 ;;;; PERSON
 
@@ -46,7 +56,10 @@
 
 (defmethod deposits :deposit/add
   [_ [deposit-id person deposit] state]
-  {:state (assoc state deposit-id (assoc deposit :person person))})
+  (let [deposit (assoc deposit
+                       :person person
+                       :tax-year (calculate-tax-year deposit))]
+    {:state (assoc state deposit-id deposit)}))
 
 (defmethod deposits :person/add
   [_ [person] state]

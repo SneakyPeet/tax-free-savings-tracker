@@ -42,19 +42,21 @@
     (t/is (= {:state sut/initial-deposits} (sut/deposits :init))))
   (t/testing ":person/add should do nothing"
     (t/is (= {:state sut/initial-deposits} (sut/deposits :person/add ["Piet"] sut/initial-deposits))))
-  (t/testing ":deposit/add should add the deposit"
+  (t/testing ":deposit/add should add the deposit and calculate the tax year"
     (let [deposit-id (random-uuid)
           person "Piet"
-          deposit {}
-          expected {deposit-id (assoc deposit :person person)}]
+          deposit {:year 2018 :month 1 :day 11}
+          expected {deposit-id (assoc deposit
+                                      :person person
+                                      :tax-year 2017)}]
       (t/is (= {:state expected} (sut/deposits :deposit/add [deposit-id person deposit] sut/initial-deposits))))))
 
 
 (t/deftest deposits-for-person
   (let [deposit-id (random-uuid)
         person "Piet"
-        deposit {:foo "bar"}
-        expected [(assoc deposit :person person)]
+        deposit {:year 2019 :month 8 :day 8}
+        expected [(assoc deposit :person person :tax-year 2019)]
         state (reconciler/make-init)]
     (citrus/dispatch-sync! state :deposits :deposit/add deposit-id person deposit)
     (t/testing "no deposits should return []"
@@ -66,3 +68,14 @@
 (t/deftest lifetime-contributions
   (let [deposits [{:amount 10} {:amount 15} {:amount 25}]]
     (t/is (= 50 (sut/lifetime-contributions deposits)))))
+
+
+;;;; Tax Year
+
+(t/deftest calculate-tax-year
+  (let [d (fn [y m d] {:year y :month m :day d})]
+    (t/is (= 2017 (sut/calculate-tax-year (d 2018 1 1))))
+    (t/is (= 2017 (sut/calculate-tax-year (d 2018 2 28))))
+    (t/is (= 2015 (sut/calculate-tax-year (d 2016 2 29))))
+    (t/is (= 2018 (sut/calculate-tax-year (d 2018 3 1))))
+    (t/is (= 2018 (sut/calculate-tax-year (d 2018 12 31))))))
