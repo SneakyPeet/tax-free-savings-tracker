@@ -55,10 +55,11 @@
   {:state initial-deposits})
 
 (defmethod deposits :deposit/add
-  [_ [deposit-id person deposit] state]
+  [_ [deposit-id person {:keys [year month day] :as deposit}] state]
   (let [deposit (assoc deposit
                        :person person
-                       :tax-year (calculate-tax-year deposit))]
+                       :tax-year (calculate-tax-year deposit)
+                       :timestamp (.getTime (time/date-time year month day)))]
     {:state (assoc state deposit-id deposit)}))
 
 (defmethod deposits :person/add
@@ -80,3 +81,13 @@
   (->> deposits
        (map :amount)
        (reduce + 0)))
+
+(defn current-tax-year-end-details []
+  (let [now (time/date-time now)
+        year (time/year now)
+        month (time/month now)
+        year (if (> month 2) (inc year) year)
+        last-day (time/last-day-of-the-month year month)
+        interval (time/interval now last-day)]
+    {:ends-in-days (time/in-days interval)
+     :end-date last-day}))

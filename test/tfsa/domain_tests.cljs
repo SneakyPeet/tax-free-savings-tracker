@@ -2,7 +2,8 @@
   (:require [tfsa.domain :as sut]
             [cljs.test :as t :include-macros true]
             [tfsa.reconciler :as reconciler]
-            [citrus.core :as citrus]))
+            [citrus.core :as citrus]
+            [cljs-time.core :as time]))
 
 
 ;;;; PERSON
@@ -42,13 +43,14 @@
     (t/is (= {:state sut/initial-deposits} (sut/deposits :init))))
   (t/testing ":person/add should do nothing"
     (t/is (= {:state sut/initial-deposits} (sut/deposits :person/add ["Piet"] sut/initial-deposits))))
-  (t/testing ":deposit/add should add the deposit and calculate the tax year"
+  (t/testing ":deposit/add should add the deposit and calculate the tax year and add the date"
     (let [deposit-id (random-uuid)
           person "Piet"
           deposit {:year 2018 :month 1 :day 11}
           expected {deposit-id (assoc deposit
                                       :person person
-                                      :tax-year 2017)}]
+                                      :tax-year 2017
+                                      :timestamp (.getTime (time/date-time 2018 1 11)))}]
       (t/is (= {:state expected} (sut/deposits :deposit/add [deposit-id person deposit] sut/initial-deposits))))))
 
 
@@ -56,7 +58,7 @@
   (let [deposit-id (random-uuid)
         person "Piet"
         deposit {:year 2019 :month 8 :day 8}
-        expected [(assoc deposit :person person :tax-year 2019)]
+        expected [(assoc deposit :person person :tax-year 2019 :timestamp (.getTime (time/date-time 2019 8 8)))]
         state (reconciler/make-init)]
     (citrus/dispatch-sync! state :deposits :deposit/add deposit-id person deposit)
     (t/testing "no deposits should return []"

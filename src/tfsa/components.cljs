@@ -4,8 +4,13 @@
             [tfsa.app-state :as app-state]
             [tfsa.domain :as domain]
             [tfsa.config :as conf]
-            [cljs-time.core :as time]))
+            [cljs-time.core :as time]
+            [goog.string :as gstring]))
 
+
+(defn currency [n] (str "R" (.toLocaleString n)))
+
+(defn bold-currency [n] [:strong.has-text-white (currency n)])
 
 ;;;; PERSON SELECTION
 
@@ -44,15 +49,18 @@
   [:div.modal.is-active
    [:div.modal-background]
    [:div.modal-content
-    [:div.field.has-addons.has-addons-centered
-     [:div.control
-      [:input.input {:type "text" :on-change #(reset! *person (.. % -target -value)) :value @*person}]]
-     [:div.control
-      [:button.button.is-primary
-       {:on-click (fn []
-                    (f @*person)
-                    (reset! *person ""))}
-       "Add Person"]]]]
+    [:form {:on-submit (fn [e]
+                      (.preventDefault e)
+                      (f @*person)
+                      (reset! *person ""))}
+     [:div.field.has-addons.has-addons-centered
+      [:div.control
+       [:input.input {:type "text" :on-change #(reset! *person (.. % -target -value))
+                      :placeholder "Name" :value @*person}]]
+      [:div.control
+       [:button.button.is-primary
+        {:type "submit"}
+        "Add Person"]]]]]
    [:button.modal-close.has-text-dark {:aria-label "close" :on-click close}]])
 
 
@@ -81,48 +89,49 @@
    can-deposit? set-field deposit]
   (let [last-day-of-month (time/day (time/last-day-of-the-month year month))
         days (range 1 (inc last-day-of-month))]
-    [:div.field.is-grouped.is-grouped-multiline.is-grouped-centered
-     (wrap-field
-      [:div.select.is-small
-       [:select
-        {:value year
-         :on-change (fn [e]
-                      (let [y (js/parseInt (.. e -target -value))]
-                        (set-field :year y)
-                        (when (< (time/day (time/last-day-of-the-month y month)) day)
-                          (set-field :day 1))))}
-        (->> years (map (fn [y] [:option y])))]])
-     (wrap-field
-      [:div.select.is-small
-       [:select
-        {:value month
-         :on-change (fn [e]
-                      (let [m (js/parseInt (.. e -target -value))]
-                        (set-field :month m)
-                        (when (< (time/day (time/last-day-of-the-month year m)) day)
-                          (set-field :day 1))))}
-        (->> months (map (fn [[i t]] [:option {:value i} t])))]])
-     (wrap-field
-      [:div.select.is-small
-       [:select
-        {:value day
-         :on-change #(set-field :day (js/parseInt (.. % -target -value)))}
-        (->> days (map (fn [d] [:option d])))]])
-     (wrap-field
-      [:input.input.is-small {:type "number"
-                     :placeholder "Deposit Amount"
-                     :value (str (if (zero? amount) "" amount))
-                     :on-change #(set-field :amount (js/parseInt (max 0 (.. % -target -value) 0)))}])
-     (wrap-field
-      [:input.input.is-small {:type "text"
-                     :placeholder "Note"
-                     :value note
-                     :on-change #(set-field :note (.. % -target -value))}])
-     (wrap-field
-      [:button.button.is-primary.is-small
-       {:disabled (not can-deposit?)
-        :on-click #(deposit deposit-details)}
-       "Deposit"])]))
+    [:div {:style {:padding-top "20px" :padding-bottom "20px"}}
+     [:div.field.is-grouped.is-grouped-multiline.is-grouped-centered
+      (wrap-field
+       [:div.select
+        [:select
+         {:value year
+          :on-change (fn [e]
+                       (let [y (js/parseInt (.. e -target -value))]
+                         (set-field :year y)
+                         (when (< (time/day (time/last-day-of-the-month y month)) day)
+                           (set-field :day 1))))}
+         (->> years (map (fn [y] [:option y])))]])
+      (wrap-field
+       [:div.select
+        [:select
+         {:value month
+          :on-change (fn [e]
+                       (let [m (js/parseInt (.. e -target -value))]
+                         (set-field :month m)
+                         (when (< (time/day (time/last-day-of-the-month year m)) day)
+                           (set-field :day 1))))}
+         (->> months (map (fn [[i t]] [:option {:value i} t])))]])
+      (wrap-field
+       [:div.select
+        [:select
+         {:value day
+          :on-change #(set-field :day (js/parseInt (.. % -target -value)))}
+         (->> days (map (fn [d] [:option d])))]])
+      (wrap-field
+       [:input.input {:type "number"
+                      :placeholder "Deposit Amount"
+                      :value (str (if (zero? amount) "" amount))
+                      :on-change #(set-field :amount (js/parseInt (max 0 (.. % -target -value) 0)))}])
+      (wrap-field
+       [:input.input {:type "text"
+                      :placeholder "Note"
+                      :value note
+                      :on-change #(set-field :note (.. % -target -value))}])
+      (wrap-field
+       [:button.button.is-primary
+        {:disabled (not can-deposit?)
+         :on-click #(deposit deposit-details)}
+        "Deposit"])]]))
 
 (defn DepositFormContainer [r]
   (DepositForm
@@ -133,6 +142,94 @@
      (citrus/dispatch! r :deposit-details :deposit/clear)
      (citrus/dispatch! r :deposits :deposit/add (random-uuid) @(domain/selected-person r) deposit))))
 
+
+;;;; INFO
+
+(defn date-string [year month day]
+  (str day " " (get months month) " " year))
+
+(rum/defc TaxYearTable < rum/static
+  [deposits-by-tax-year current-tax-year]
+  [:table.table.is-striped.is-narrow.is-hoverable.is-fullwidth
+   [:thead
+    [:tr [:th.has-text-centered.is-size-3 {:col-span 4} "Contributions By Tax Year"]]
+    [:tr [:th "Tax Year"] [:th "Allowed"] [:th "Actual"] [:th "Remaining"]]]
+   [:tbody
+    (->> deposits-by-tax-year
+         (sort-by first)
+         reverse
+         (map
+          (fn [[year deposits]]
+            (let [current? (= year current-tax-year)
+                  limit (get conf/tax-year-limits year)
+                  amount (->> deposits
+                              (map :amount)
+                              (reduce + 0))
+                  remainder (- limit amount)
+                  under-limit? (>= remainder 0)
+                  contributed-all? (zero? remainder)]
+              [:tr {:key year
+                    :class (cond (not under-limit?) "has-background-danger has-text-white"
+                                 contributed-all? "has-background-primary has-text-white"
+                                 current? "has-background-info has-text-white")}
+               [:td year]
+               [:td (currency limit)]
+               [:td (currency amount)]
+               (cond
+                 (not under-limit?)
+                 [:td "You went over the allowed limit by " (bold-currency (- remainder)) " and will get taxed on that amount"]
+                 contributed-all?
+                 [:td "Well done you have maxed out your tax free for " year]
+                 current?
+                 [:td "You can still contribute " (bold-currency remainder) " for this year"]
+                 :else
+                 [:td ""])]))))]])
+
+(rum/defc DepositTable < rum/static
+  [deposits]
+  [:table.table.is-striped.is-narrow.is-hoverable.is-fullwidth
+   [:thead
+    [:tr [:th.has-text-centered.is-size-3 {:col-span 4} "Contributions By Tax Year"]]
+    [:tr [:th "Date"] [:th "Tax Year"] [:th "Amount"] [:th "Note"]]]
+   [:tbody
+    (->> deposits
+         (sort-by :timestamp)
+         reverse
+         (map-indexed
+          (fn [i {:keys [timestamp tax-year amount note year month day]}]
+            [:tr {:key i}
+             [:td (date-string year month day)]
+             [:td tax-year]
+             [:td (currency amount)]
+             [:td note]])))]])
+
+
+(rum/defc AllowedContributions < rum/static
+  [deposits deposits-by-tax-year current-tax-year]
+  (let [lifetime (domain/lifetime-contributions deposits)
+        {:keys [ends-in-days end-date]} (domain/current-tax-year-end-details)
+        this-year (->> (get deposits-by-tax-year current-tax-year)
+                       (map :amount)
+                       (reduce + 0))
+        year-limit (get conf/tax-year-limits current-tax-year)
+        remainder (max 0 (- year-limit this-year))]
+    (let [item (fn [t v s & [text-style]]
+                 [:div.level-item.has-text-centered {:class text-style}
+                  [:div
+                   [:p.heading t]
+                   [:p.title {:class text-style} v]
+                   [:p.subtitle {:style {:margin-top "0"} :class text-style} s]]])]
+      [:nav.level
+       (item "You Can Still Contribute" (currency remainder) (str " for " current-tax-year) "has-text-info")
+       (item "Tax Year Ends In" (str ends-in-days " Days")
+             (str "ends " (date-string
+                           (time/year end-date)
+                           (time/month end-date)
+                           (time/day end-date))))
+       (item "This Year You Saved" (currency this-year) (str "of " (currency year-limit)))
+       (item "Your Lifetime Savings" (currency lifetime) (str  "of " (currency conf/lifetime-limit)))
+
+       ])))
 
 ;;;; LAYOUT
 
@@ -159,7 +256,11 @@
 (rum/defc App < rum/reactive [r]
   (let [selected-person (rum/react (domain/selected-person r))
         people (rum/react (domain/all-people r))
-        deposits (rum/react (domain/deposits-for-person r selected-person))]
+        deposits (rum/react (domain/deposits-for-person r selected-person))
+        deposits-by-tax-year (group-by :tax-year deposits)
+        now (time/now)
+        current-tax-year (domain/calculate-tax-year {:year (time/year now) :month (time/month now) :day (time/day now)})
+        deposits? (> (count deposits) 0)]
     [:div
      [:section.hero.is-primary
       [:div.hero-head]
@@ -168,14 +269,12 @@
         [:h1.title "Tax Free Savings Tracker"]]]
       [:div.hero-foot
        (PersonSelectorContainer r)]]
+     (when (true? (rum/react (app-state/show-adding-person? r)))
+       (AddPersonContainer r))
      [:div.section
       [:div.container
        (welcome-message people selected-person deposits)
+       (when deposits? (AllowedContributions deposits deposits-by-tax-year current-tax-year))
        (DepositFormContainer r)
-
-       (when (true? (rum/react (app-state/show-adding-person? r)))
-         (AddPersonContainer r))
-
-       [:ul (map-indexed
-             (fn [i d] [:li {:key i} (str d)])
-             (rum/react (domain/deposits-for-person r (rum/react (domain/selected-person r)))))]]]]))
+       (when deposits? (TaxYearTable deposits-by-tax-year current-tax-year))
+       (when deposits? (DepositTable deposits))]]]))
