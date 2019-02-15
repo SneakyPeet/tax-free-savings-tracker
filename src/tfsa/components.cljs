@@ -11,21 +11,22 @@
 
 (rum/defc PersonSelector < rum/static
   [people selected-person select-person add-person]
-  [:div.buttons.is-centered
-   (let [people-buttons
-         (vec
-          (map (fn [person]
-                 [:button.button
-                  {:key person
-                   :class (when (= person selected-person) "is-primary")
-                   :on-click #(select-person person)}
-                  person])
-               people))]
-     (into people-buttons
-           [[:a.button
-             {:on-click #(add-person)}
-             [:span.icon.is-small
-              [:i.fas.fa-plus]]]]))])
+  [:nav.tabs.is-boxed.is-centered.is-fullwidth
+   [:div.container
+    [:ul
+     (map (fn [person]
+            [:li {:key person
+                  :class (when (= person selected-person) "is-active")}
+             [:a
+              {:on-click #(select-person person)}
+              person]])
+          people)
+     [:li
+      [:a
+       {:on-click #(add-person)}
+       [:span.icon.is-small
+        [:i.fas.fa-plus {:aria-hidden true}]]
+       ]]]]])
 
 
 (defn PersonSelectorContainer [r]
@@ -39,21 +40,26 @@
 ;;;; ADD PERSON
 
 (rum/defcs AddPerson < rum/static (rum/local "" ::person)
-  [{*person ::person} f]
-  [:div.field.has-addons.has-addons-centered
-   [:div.control
-    [:input.input {:type "text" :on-change #(reset! *person (.. % -target -value)) :value @*person}]]
-   [:div.control
-    [:button.button.is-primary
-     {:on-click (fn []
-                  (f @*person)
-                  (reset! *person ""))}
-     "Add Person"]]])
+  [{*person ::person} f close]
+  [:div.modal.is-active
+   [:div.modal-background]
+   [:div.modal-content
+    [:div.field.has-addons.has-addons-centered
+     [:div.control
+      [:input.input {:type "text" :on-change #(reset! *person (.. % -target -value)) :value @*person}]]
+     [:div.control
+      [:button.button.is-primary
+       {:on-click (fn []
+                    (f @*person)
+                    (reset! *person ""))}
+       "Add Person"]]]]
+   [:button.modal-close.has-text-dark {:aria-label "close" :on-click close}]])
 
 
 (defn AddPersonContainer [r]
   (AddPerson
-   #(citrus/broadcast! r :person/add %)))
+   #(citrus/broadcast! r :person/add %)
+   #(citrus/dispatch! r :adding-person? :adding-person/hide)))
 
 
 ;;;; DEPOSIT FORM
@@ -77,7 +83,7 @@
         days (range 1 (inc last-day-of-month))]
     [:div.field.is-grouped.is-grouped-multiline.is-grouped-centered
      (wrap-field
-      [:div.select
+      [:div.select.is-small
        [:select
         {:value year
          :on-change (fn [e]
@@ -87,7 +93,7 @@
                           (set-field :day 1))))}
         (->> years (map (fn [y] [:option y])))]])
      (wrap-field
-      [:div.select
+      [:div.select.is-small
        [:select
         {:value month
          :on-change (fn [e]
@@ -97,23 +103,23 @@
                           (set-field :day 1))))}
         (->> months (map (fn [[i t]] [:option {:value i} t])))]])
      (wrap-field
-      [:div.select
+      [:div.select.is-small
        [:select
         {:value day
          :on-change #(set-field :day (js/parseInt (.. % -target -value)))}
         (->> days (map (fn [d] [:option d])))]])
      (wrap-field
-      [:input.input {:type "number"
+      [:input.input.is-small {:type "number"
                      :placeholder "Deposit Amount"
                      :value (str (if (zero? amount) "" amount))
                      :on-change #(set-field :amount (js/parseInt (max 0 (.. % -target -value) 0)))}])
      (wrap-field
-      [:input.input {:type "text"
+      [:input.input.is-small {:type "text"
                      :placeholder "Note"
                      :value note
                      :on-change #(set-field :note (.. % -target -value))}])
      (wrap-field
-      [:button.button.is-primary
+      [:button.button.is-primary.is-small
        {:disabled (not can-deposit?)
         :on-click #(deposit deposit-details)}
        "Deposit"])]))
@@ -132,10 +138,20 @@
 
 (rum/defc App < rum/reactive [r]
   [:div
-   (PersonSelectorContainer r)
-   (when (true? (rum/react (app-state/show-adding-person? r)))
-     (AddPersonContainer r))
-   (DepositFormContainer r)
-   [:ul (map-indexed
-          (fn [i d] [:li {:key i} (str d)])
-          (rum/react (domain/deposits-for-person r (rum/react (domain/selected-person r)))))]])
+   [:section.hero.is-primary
+    [:div.hero-head]
+    [:div.hero-body
+     [:div.container
+      [:h1.title "Tax Free Savings Tracker"]]]
+    [:div.hero-foot
+     (PersonSelectorContainer r)]]
+   [:div.section
+    [:div.container
+     (DepositFormContainer r)
+
+     (when (true? (rum/react (app-state/show-adding-person? r)))
+       (AddPersonContainer r))
+
+     [:ul (map-indexed
+           (fn [i d] [:li {:key i} (str d)])
+           (rum/react (domain/deposits-for-person r (rum/react (domain/selected-person r)))))]]]])
