@@ -48,6 +48,7 @@
           person "Piet"
           deposit {:year 2018 :month 1 :day 11}
           expected {deposit-id (assoc deposit
+                                      :deposit-id deposit-id
                                       :person person
                                       :tax-year 2017
                                       :timestamp (.getTime (time/date-time 2018 1 11)))}]
@@ -58,7 +59,8 @@
   (let [deposit-id (random-uuid)
         person "Piet"
         deposit {:year 2019 :month 8 :day 8}
-        expected [(assoc deposit :person person :tax-year 2019 :timestamp (.getTime (time/date-time 2019 8 8)))]
+        expected [(assoc deposit :person person :deposit-id deposit-id
+                         :tax-year 2019 :timestamp (.getTime (time/date-time 2019 8 8)))]
         state (reconciler/make-init)]
     (citrus/dispatch-sync! state :deposits :deposit/add deposit-id person deposit)
     (t/testing "no deposits should return []"

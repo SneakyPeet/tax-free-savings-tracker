@@ -206,22 +206,35 @@
                  [:td ""])]))))]])
 
 (rum/defc DepositTable < rum/static
-  [deposits]
+  [deposits f]
   [:table.table.is-striped.is-narrow.is-hoverable.is-fullwidth
    [:thead
-    [:tr [:th.has-text-centered.is-size-3 {:col-span 4} "Contributions By Tax Year"]]
-    [:tr [:th "Date"] [:th "Tax Year"] [:th "Amount"] [:th "Note"]]]
+    [:tr [:th.has-text-centered.is-size-3 {:col-span 5} "Contributions By Tax Year"]]
+    [:tr [:th "Date"] [:th "Tax Year"] [:th "Amount"] [:th {:col-span 2}"Note"]]]
    [:tbody
     (->> deposits
          (sort-by :timestamp)
          reverse
          (map-indexed
-          (fn [i {:keys [timestamp tax-year amount note year month day]}]
+          (fn [i {:keys [timestamp tax-year amount note year month day deposit-id]}]
             [:tr {:key i}
              [:td (date-string year month day)]
              [:td tax-year]
              [:td (currency amount)]
-             [:td note]])))]])
+             [:td note]
+             [:td.has-text-right
+              [:button.button.is-danger.is-small.is-outlined
+               {:on-click
+                #(let [delete? (js/confirm (str "Are you sure you want to delete this?"))]
+                   (when delete? (f deposit-id)))}
+               [:span.icon.is-small
+                [:i.fas.fa-times]]]]])))]])
+
+
+(defn DepositTableContainer [r deposits]
+  (DepositTable
+   deposits
+   prn))
 
 
 (rum/defc AllowedContributions < rum/static
@@ -283,7 +296,13 @@
         deposits? (> (count deposits) 0)]
     [:div
      [:section.hero.is-primary
-      [:div.hero-head]
+      [:div.hero-head
+       [:nav.navbar
+        [:div.container
+         [:div.navbar-menu
+          [:div.navbar-end
+           [:a.navbar-item {:target "_blank" :href "https://github.com/SneakyPeet/tax-free-savings-tracker"}
+            [:span.icon [:i.fab.fa-github]]]]]]]]
       [:div.hero-body
        [:div.container
         [:h1.title "Tax Free Savings Tracker"]]]
@@ -297,5 +316,5 @@
        (when deposits? (AllowedContributions deposits deposits-by-tax-year current-tax-year))
        (DepositFormContainer r)
        (when deposits? (TaxYearTable deposits-by-tax-year current-tax-year))
-       (when deposits? (DepositTable deposits))
+       (when deposits? (DepositTableContainer r deposits))
        (when (> (count people) 2) (RemovePersonContainer r))]]]))
