@@ -14,7 +14,11 @@
   (t/testing ":person/change should return new person"
     (t/is (= {:state "Piet"} (sut/person :person/change ["Piet"] "Foo"))))
   (t/testing ":person/add should return new person"
-    (t/is (= {:state "Piet"} (sut/person :person/add ["Piet"] "Foo")))))
+    (t/is (= {:state "Piet"} (sut/person :person/add ["Piet"] "Foo"))))
+  (t/testing ":person/remove should do nothing if different person"
+    (t/is (= {:state "Foo"} (sut/person :person/remove ["Piet"] "Foo"))))
+  (t/testing ":person/remove should set person to nil if same person"
+    (t/is (= {:state nil} (sut/person :person/remove ["Piet"] "Piet")))))
 
 
 (t/deftest selected-person
@@ -28,7 +32,9 @@
   (t/testing ":init should return initial-people"
     (t/is (= {:state sut/initial-people} (sut/people :init))))
   (t/testing ":person/add should add person to people"
-    (t/is (= {:state (conj sut/initial-people "Piet")} (sut/people :person/add ["Piet"] sut/initial-people)))))
+    (t/is (= {:state (conj sut/initial-people "Piet")} (sut/people :person/add ["Piet"] sut/initial-people))))
+  (t/testing ":person/remove should remove person from people"
+    (t/is (= {:state #{"Daan"}} (sut/people :person/remove ["Piet"] #{"Piet" "Daan"})))))
 
 
 (t/deftest all-people
@@ -43,6 +49,12 @@
     (t/is (= {:state sut/initial-deposits} (sut/deposits :init))))
   (t/testing ":person/add should do nothing"
     (t/is (= {:state sut/initial-deposits} (sut/deposits :person/add ["Piet"] sut/initial-deposits))))
+  (t/testing ":person/remove should remove all deposits"
+    (let [deposits {1 {:person "Piet"}
+                    2 {:person "Piet"}
+                    3 {:person "Daan"}}
+          expected {3 {:person "Daan"}}]
+      (t/is (= {:state expected} (sut/deposits :person/remove ["Piet"] deposits)))))
   (t/testing ":deposit/add should add the deposit and calculate the tax year and add the date"
     (let [deposit-id (random-uuid)
           person "Piet"

@@ -20,6 +20,9 @@
 (defmethod adding-person? :person/add []
   {:state false})
 
+(defmethod adding-person? :person/remove [_ _ state]
+  {:state state})
+
 
 (defn show-adding-person? [r] (citrus/subscription r [:adding-person?]))
 
@@ -55,7 +58,7 @@
            (select-keys state [:year :month :day]))})
 
 (defmethod deposit-details :person/add [_ _ state] {:state state})
-
+(defmethod deposit-details :person/remove [_ _ state] {:state state})
 
 (defn deposit-form-detail [r] (citrus/subscription r [:deposit-details]))
 

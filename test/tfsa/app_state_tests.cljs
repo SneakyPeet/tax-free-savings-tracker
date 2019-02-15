@@ -14,7 +14,9 @@
   (t/testing ":adding-person/hide should return false"
     (t/is (= {:state false} (sut/adding-person? :adding-person/hide))))
   (t/testing ":person/add should return false"
-    (t/is (= {:state false} (sut/adding-person? :person/add "Piet"))))
+    (t/is (= {:state false} (sut/adding-person? :person/add ["Piet"]))))
+  (t/testing ":person/remove should do nothing"
+    (t/is (= {:state false} (sut/adding-person? :person/remove ["Piet"] false))))
   )
 
 

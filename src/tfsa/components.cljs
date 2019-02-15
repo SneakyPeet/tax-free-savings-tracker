@@ -85,9 +85,16 @@
     [:i.fas.fa-times]]]])
 
 (defn RemovePersonContainer [r]
-  (RemovePerson
-   (rum/react (domain/selected-person r))
-   #(js/alert "whoop")))
+  (let [selected-person (rum/react (domain/selected-person r))
+        people (rum/react (domain/all-people r))
+        next-person (-> people
+                        (disj selected-person)
+                        first)]
+    (RemovePerson
+     selected-person
+     (fn []
+       (citrus/dispatch! r :person :person/change next-person)
+       (citrus/broadcast! r :person/remove selected-person)))))
 
 
 ;;;; DEPOSIT FORM
@@ -209,7 +216,7 @@
   [deposits f]
   [:table.table.is-striped.is-narrow.is-hoverable.is-fullwidth
    [:thead
-    [:tr [:th.has-text-centered.is-size-3 {:col-span 5} "Contributions By Tax Year"]]
+    [:tr [:th.has-text-centered.is-size-3 {:col-span 5} "All Contributions"]]
     [:tr [:th "Date"] [:th "Tax Year"] [:th "Amount"] [:th {:col-span 2}"Note"]]]
    [:tbody
     (->> deposits
@@ -255,7 +262,7 @@
       [:nav.level
        (item "You Can Still Contribute" (currency remainder) (str " for " current-tax-year) "has-text-info")
        (item "Tax Year Ends In" (str ends-in-days " Days")
-             (str "ends " (date-string
+             (str "on " (date-string
                            (time/year end-date)
                            (time/month end-date)
                            (time/day end-date))))
@@ -317,4 +324,4 @@
        (DepositFormContainer r)
        (when deposits? (TaxYearTable deposits-by-tax-year current-tax-year))
        (when deposits? (DepositTableContainer r deposits))
-       (when (> (count people) 2) (RemovePersonContainer r))]]]))
+       (when (> (count people) 1) (RemovePersonContainer r))]]]))

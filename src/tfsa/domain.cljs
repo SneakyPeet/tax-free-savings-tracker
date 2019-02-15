@@ -26,6 +26,9 @@
 (defmethod person :person/add [_ [person]]
   {:state person})
 
+(defmethod person :person/remove [_ [person] state]
+  {:state (when (not= person state) state)})
+
 (defn selected-person [r] (citrus/subscription r [:person]))
 
 
@@ -40,6 +43,9 @@
 
 (defmethod people :person/add [_ [person] state]
   {:state (conj state person)})
+
+(defmethod people :person/remove [_ [person] state]
+  {:state (disj state person)})
 
 
 (defn all-people [r] (citrus/subscription r [:people]))
@@ -66,6 +72,12 @@
 (defmethod deposits :person/add
   [_ [person] state]
   {:state state})
+
+(defmethod deposits :person/remove
+  [_ [person] state]
+  {:state (->> state
+               (remove (fn [[k v]] (= (:person v) person)))
+               (into {}))})
 
 
 (defn deposits-for-person [r person]
