@@ -134,7 +134,6 @@
 (def storage-key "tfsa-app-state")
 
 (defn save-state [deposits]
-  (prn (saveable->state (deposits->saveable deposits)))
   (when-some [storage js/localStorage]
     (.setItem storage
               storage-key

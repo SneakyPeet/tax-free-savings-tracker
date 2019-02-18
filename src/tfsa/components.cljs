@@ -297,7 +297,9 @@
   (let [file (aget (.. e -target -files) 0)
         reader (js/FileReader.)]
     (set! (.-onload reader)
-          #(citrus/dispatch! r :file :load (.. % -target -result)))
+          (fn [e]
+            (citrus/dispatch! r :file :load (.. e -target -result))
+            (.reset (.getElementById js/document "upload-form"))))
     (.readAsText reader file)))
 
 
@@ -319,7 +321,8 @@
                            :style {:display "inline-block"}}
            [:span.icon [:i.fas.fa-save]]]
           [:a.navbar-item {:style {:display "inline-block"}}
-           [:input.file-input {:type "file" :style {:cursor "pointer"} :on-change #(read-file r %)}]
+           [:form {:id "upload-form"}
+            [:input.file-input {:type "file" :style {:cursor "pointer"} :on-change #(read-file r %)}]]
            [:span.icon [:i.fas.fa-upload]]]
           [:a.navbar-item {:on-click #(js/alert "TODO") :style {:display "inline-block"}}
            [:span.icon [:i.fas.fa-question-circle]]]
@@ -344,6 +347,7 @@
      [:div.section
       [:ul
        [:li [:strong "TODO"]]
+       [:li "can only upload once"]
        [:li "Read Me"]
        [:li "Made By"]
        [:li "Disclaimer"]
