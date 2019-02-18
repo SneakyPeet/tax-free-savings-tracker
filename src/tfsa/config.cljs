@@ -9,6 +9,6 @@
   (merge
    {2015 30000
     2016 30000}
-   (->> (range 2017 (inc (time/year (time/now))))
+   (->> (range 2017 (+ 2 (time/year (time/now))))
         (map #(hash-map % 33000))
         (into {}))))

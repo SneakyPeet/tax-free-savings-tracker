@@ -17,8 +17,8 @@
 
 (defmulti person (fn [event] event))
 
-(defmethod person :init []
-  {:state initial-person})
+(defmethod person :init [_ _ state]
+  {:state (if (string? state) state initial-person)})
 
 (defmethod person :person/change [_ [person]]
   {:state person})
@@ -38,8 +38,8 @@
 
 (defmulti people (fn [event] event))
 
-(defmethod people :init []
-  {:state initial-people})
+(defmethod people :init [_ _ state]
+  {:state (if (set? state) state initial-people)})
 
 (defmethod people :person/add [_ [person] state]
   {:state (conj state person)})
@@ -57,16 +57,20 @@
 
 (defmulti deposits (fn [evt] evt))
 
-(defmethod deposits :init []
-  {:state initial-deposits})
+(defmethod deposits :init [_ _ state]
+  {:state (if (map? state) state initial-deposits)})
+
+(defn calculate-deposit-data [{:keys [year month day] :as deposit}]
+  (assoc deposit
+         :tax-year (calculate-tax-year deposit)
+         :timestamp (.getTime (time/date-time year month day))))
 
 (defmethod deposits :deposit/add
   [_ [deposit-id person {:keys [year month day] :as deposit}] state]
-  (let [deposit (assoc deposit
-                       :deposit-id deposit-id
-                       :person person
-                       :tax-year (calculate-tax-year deposit)
-                       :timestamp (.getTime (time/date-time year month day)))
+  (let [deposit (-> deposit
+                    (assoc :deposit-id deposit-id
+                           :person person)
+                    calculate-deposit-data)
         state (assoc state deposit-id deposit)]
     {:state state
      :save-state state}))
@@ -113,4 +117,5 @@
         last-day (time/last-day-of-the-month year month)
         interval (time/interval now last-day)]
     {:ends-in-days (time/in-days interval)
-     :end-date last-day}))
+     :end-date last-day
+     :year (dec (time/year last-day))}))

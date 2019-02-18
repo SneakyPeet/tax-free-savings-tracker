@@ -3,7 +3,8 @@
             [cljs.test :as t :include-macros true]
             [tfsa.reconciler :as reconciler]
             [tfsa.config :as conf]
-            [citrus.core :as citrus]))
+            [citrus.core :as citrus]
+            [tfsa.domain :as domain]))
 
 
 (t/deftest adding-person?-controller
@@ -62,5 +63,12 @@
         (citrus/dispatch-sync! state :deposit-details :deposit/set-field :year conf/first-tfsa-year)
         (citrus/dispatch-sync! state :deposit-details :deposit/set-field :month 2)
         (citrus/dispatch-sync! state :deposit-details :deposit/set-field :day 28)
+        (citrus/dispatch-sync! state :deposit-details :deposit/set-field :amount 10)
+        (t/is (false? @(sut/can-deposit? state)))))
+    (t/testing "false if date is in upcomming tax year"
+      (let [state (reconciler/make-init)]
+        (citrus/dispatch-sync! state :deposit-details :deposit/set-field :year (inc (:year (domain/current-tax-year-end-details))))
+        (citrus/dispatch-sync! state :deposit-details :deposit/set-field :month 3)
+        (citrus/dispatch-sync! state :deposit-details :deposit/set-field :day 1)
         (citrus/dispatch-sync! state :deposit-details :deposit/set-field :amount 10)
         (t/is (false? @(sut/can-deposit? state)))))))

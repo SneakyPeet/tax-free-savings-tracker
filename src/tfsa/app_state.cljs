@@ -2,7 +2,8 @@
   (:require [citrus.core :as citrus]
             [cljs-time.core :as time]
             [tfsa.config :as conf]
-            [clojure.string :as string]))
+            [clojure.string :as string]
+            [tfsa.domain :as domain]))
 
 
 ;;;; ADDING PERSON
@@ -67,11 +68,14 @@
 (defn can-deposit? [r]
   (citrus/subscription
    r [:deposit-details]
-   (fn [{:keys [amount year month day]}]
-     (and (> amount 0)
-          (time/after?
-           (time/date-time year month day)
-           (time/last-day-of-the-month conf/first-tfsa-year 2))))))
+   (fn [{:keys [amount year month day] :as deposit}]
+     (let [tax-year (domain/calculate-tax-year deposit)
+           current-tax-year (:year (domain/current-tax-year-end-details))]
+       (and (> amount 0)
+            (time/after?
+             (time/date-time year month day)
+             (time/last-day-of-the-month conf/first-tfsa-year 2))
+            (<= tax-year current-tax-year))))))
 
 ;;;; storage
 
@@ -85,10 +89,43 @@
         (string/join "\r\n")))
 
 
+(defn saveable->deposits [s]
+  (->> (string/split-lines s)
+       (map #(string/split % ","))
+       (map (fn [[person year month day amount note]]
+              (domain/calculate-deposit-data
+               {:person person
+                :year (js/parseInt year)
+                :month (js/parseInt month)
+                :day (js/parseInt day)
+                :amount (js/parseFloat amount)
+                :note (or note "")
+                :deposit-id (random-uuid)})))))
+
+(defn saveable->state [s]
+  (let [deposits (saveable->deposits s)
+        people (set (map :person deposits))
+        person (first people)]
+    {:person person
+     :people people
+     :deposits (->> (map (juxt :deposit-id identity) deposits)
+                    (into {}))}))
+
+
 (def storage-key "tfsa-app-state")
 
-(defn save-state [_ _ e]
+(defn save-state [deposits]
+  (prn (saveable->state (deposits->saveable deposits)))
   (when-some [storage js/localStorage]
     (.setItem storage
               storage-key
-              (deposits->saveable e))))
+              (deposits->saveable deposits))))
+
+
+(defn load-state []
+  (if-some [storage js/localStorage]
+    (let [item (or (.getItem storage storage-key) "")]
+      (if-not (string/blank?  item)
+        (saveable->state item)
+        {}))
+    {}))
