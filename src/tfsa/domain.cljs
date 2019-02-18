@@ -17,8 +17,11 @@
 
 (defmulti person (fn [event] event))
 
-(defmethod person :init [_ _ state]
-  {:state (if (string? state) state initial-person)})
+(defmethod person :init [_ [given] state]
+  {:state (cond
+            (string? given) given
+            (string? state) state
+            :else initial-person)})
 
 (defmethod person :person/change [_ [person]]
   {:state person})
@@ -38,8 +41,11 @@
 
 (defmulti people (fn [event] event))
 
-(defmethod people :init [_ _ state]
-  {:state (if (set? state) state initial-people)})
+(defmethod people :init [_ [given] state]
+  {:state (cond
+            (set? given) given
+            (set? state) state
+            :else initial-people)})
 
 (defmethod people :person/add [_ [person] state]
   {:state (conj state person)})
@@ -57,8 +63,13 @@
 
 (defmulti deposits (fn [evt] evt))
 
-(defmethod deposits :init [_ _ state]
-  {:state (if (map? state) state initial-deposits)})
+(defmethod deposits :init [_ [given] state]
+  (let [new-state (cond
+                    (map? given) given
+                    (map? state) state
+                    :else initial-deposits)]
+    {:state new-state
+     :save-state new-state}))
 
 (defn calculate-deposit-data [{:keys [year month day] :as deposit}]
   (assoc deposit

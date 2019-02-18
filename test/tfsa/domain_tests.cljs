@@ -13,6 +13,8 @@
     (t/is (= {:state sut/initial-person} (sut/person :init))))
   (t/testing ":init should return given person if provided"
     (t/is (= {:state "Bar"} (sut/person :init [] "Bar"))))
+  (t/testing ":init with args should return args"
+    (t/is (= {:state "Bar"} (sut/person :init ["Bar"] "Foo"))))
   (t/testing ":person/change should return new person"
     (t/is (= {:state "Piet"} (sut/person :person/change ["Piet"] "Foo"))))
   (t/testing ":person/add should return new person"
@@ -35,6 +37,8 @@
     (t/is (= {:state sut/initial-people} (sut/people :init))))
   (t/testing ":init should return given people if provided"
     (t/is (= {:state #{"Foo" "Bar"}} (sut/people :init [] #{"Foo" "Bar"}))))
+  (t/testing ":init with args should return args"
+    (t/is (= {:state #{"Boz"}} (sut/people :init [#{"Boz"}] #{"Fez"}))))
   (t/testing ":person/add should add person to people"
     (t/is (= {:state (conj sut/initial-people "Piet")} (sut/people :person/add ["Piet"] sut/initial-people))))
   (t/testing ":person/remove should remove person from people"
@@ -50,9 +54,11 @@
 
 (t/deftest deposits-controller
   (t/testing ":init should return empty map if no initial map"
-    (t/is (= {:state sut/initial-deposits} (sut/deposits :init [] nil))))
+    (t/is (= {:state sut/initial-deposits :save-state sut/initial-deposits} (sut/deposits :init [] nil))))
   (t/testing ":init should return provided map map"
-    (t/is (= {:state {:foo 1}} (sut/deposits :init [] {:foo 1}))))
+    (t/is (= {:state {:foo 1} :save-state {:foo 1}} (sut/deposits :init [] {:foo 1}))))
+  (t/testing ":init with args should return args"
+    (t/is (= {:state {:far 2} :save-state {:far 2}} (sut/deposits :init [{:far 2}] {:foo 1}))))
   (t/testing ":person/add should do nothing"
     (t/is (= {:state sut/initial-deposits} (sut/deposits :person/add ["Piet"] sut/initial-deposits))))
   (t/testing ":person/remove should remove all deposits"

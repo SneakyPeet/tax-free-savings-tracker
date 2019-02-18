@@ -293,6 +293,14 @@
       :else nil)))
 
 
+(defn read-file [r e]
+  (let [file (aget (.. e -target -files) 0)
+        reader (js/FileReader.)]
+    (set! (.-onload reader)
+          #(citrus/dispatch! r :file :load (.. % -target -result)))
+    (.readAsText reader file)))
+
+
 (rum/defc App < rum/reactive [r]
   (let [selected-person (rum/react (domain/selected-person r))
         people (rum/react (domain/all-people r))
@@ -307,10 +315,11 @@
        [:nav.navbar
         [:div.container
          [:div.navbar-end.has-text-right
-          [:a.navbar-item {:on-click #(citrus/dispatch! r :save-file :save)
+          [:a.navbar-item {:on-click #(citrus/dispatch! r :file :save)
                            :style {:display "inline-block"}}
            [:span.icon [:i.fas.fa-save]]]
-          [:a.navbar-item {:on-click #(js/alert "TODO") :style {:display "inline-block"}}
+          [:a.navbar-item {:style {:display "inline-block"}}
+           [:input.file-input {:type "file" :style {:cursor "pointer"} :on-change #(read-file r %)}]
            [:span.icon [:i.fas.fa-upload]]]
           [:a.navbar-item {:on-click #(js/alert "TODO") :style {:display "inline-block"}}
            [:span.icon [:i.fas.fa-question-circle]]]
@@ -335,7 +344,6 @@
      [:div.section
       [:ul
        [:li [:strong "TODO"]]
-       [:li "LOAD CSV"]
        [:li "Read Me"]
        [:li "Made By"]
        [:li "Disclaimer"]

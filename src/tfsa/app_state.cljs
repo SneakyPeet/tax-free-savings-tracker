@@ -80,14 +80,19 @@
             (<= tax-year current-tax-year))))))
 
 
-;;;; saving
+;;;; file
 
-(defmulti save (fn [evt] evt))
+(defmulti file (fn [evt] evt))
 
-(defmethod save :default [_] {:state nil})
-(defmethod save :save [_]
+(defmethod file :default [_] {:state nil})
+
+(defmethod file :save [_]
   {:state nil
    :save-file nil})
+
+(defmethod file :load [_ [content]]
+  {:state nil
+   :hydrate-file content})
 
 
 ;;;; SIDE EFFECTS
@@ -154,3 +159,10 @@
         type (clj->js {:type "text/plain;charset=utf-8"})
         blob (js/Blob. name type)]
     (js/saveAs blob file-name)))
+
+
+(defn hydrate-file [r content]
+  (let [{:keys [person people deposits]} (saveable->state content)]
+    (citrus/dispatch! r :deposits :init deposits)
+    (citrus/dispatch! r :people :init people)
+    (citrus/dispatch! r :person :init person)))
