@@ -22,7 +22,8 @@
       :deposits domain/deposits
       :adding-person? app-state/adding-person?
       :deposit-details app-state/deposit-details
-      :file app-state/file}
+      :file app-state/file
+      :help app-state/help}
      :effect-handlers {:save-state save-state-effect-handler
                        :save-file save-file-effect-handler
                        :hydrate-file hydrate-file-effect-hander}})))

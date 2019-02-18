@@ -95,8 +95,36 @@
    :hydrate-file content})
 
 
+;;;; help
+(defmulti help (fn [evt] evt))
+
+(defmethod help :default [_ _ state] {:state state})
+
+(defmethod help :init [_]
+  {:state {:show? false
+           :options {:store-local? true}}})
+
+(defmethod help :show [_ _ state]
+  {:state (assoc state :show? true)})
+
+(defmethod help :hide [_ _ state]
+  {:state (assoc state :show? false)})
+
+
+(defn show-help? [r] (citrus/subscription r [:help :show?]))
+
 ;;;; SIDE EFFECTS
 ;;;; storage
+
+(defn reset-state
+  ([r] (reset-state r {:person domain/initial-person
+                       :people domain/initial-people
+                       :deposits domain/initial-deposits}))
+  ([r state]
+   (let [{:keys [person people deposits]} state]
+     (citrus/dispatch! r :deposits :init deposits)
+     (citrus/dispatch! r :people :init people)
+     (citrus/dispatch! r :person :init person))))
 
 (defn deposits->saveable [deposits]
    (->> deposits
@@ -161,7 +189,4 @@
 
 
 (defn hydrate-file [r content]
-  (let [{:keys [person people deposits]} (saveable->state content)]
-    (citrus/dispatch! r :deposits :init deposits)
-    (citrus/dispatch! r :people :init people)
-    (citrus/dispatch! r :person :init person)))
+  (reset-state r (saveable->state content)))
