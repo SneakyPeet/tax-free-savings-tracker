@@ -13,7 +13,7 @@
      :deposits domain/deposits
      :adding-person? app-state/adding-person?
      :deposit-details app-state/deposit-details}
-    :effect-handlers {}}))
+    :effect-handlers {:save-state app-state/save-state}}))
 
 
 (defn init [r] (citrus/broadcast-sync! r :init))

@@ -66,12 +66,16 @@
                        :deposit-id deposit-id
                        :person person
                        :tax-year (calculate-tax-year deposit)
-                       :timestamp (.getTime (time/date-time year month day)))]
-    {:state (assoc state deposit-id deposit)}))
+                       :timestamp (.getTime (time/date-time year month day)))
+        state (assoc state deposit-id deposit)]
+    {:state state
+     :save-state state}))
 
 (defmethod deposits :deposit/remove
   [_ [deposit-id] state]
-  {:state (dissoc state deposit-id)})
+  (let [state (dissoc state deposit-id)]
+    {:state state
+     :save-state state}))
 
 (defmethod deposits :person/add
   [_ [person] state]
@@ -79,9 +83,11 @@
 
 (defmethod deposits :person/remove
   [_ [person] state]
-  {:state (->> state
-               (remove (fn [[k v]] (= (:person v) person)))
-               (into {}))})
+  (let [state (->> state
+                   (remove (fn [[k v]] (= (:person v) person)))
+                   (into {}))]
+    {:state state
+     :save-state state}))
 
 
 (defn deposits-for-person [r person]

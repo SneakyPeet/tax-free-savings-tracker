@@ -1,7 +1,8 @@
 (ns tfsa.app-state
   (:require [citrus.core :as citrus]
             [cljs-time.core :as time]
-            [tfsa.config :as conf]))
+            [tfsa.config :as conf]
+            [clojure.string :as string]))
 
 
 ;;;; ADDING PERSON
@@ -71,3 +72,23 @@
           (time/after?
            (time/date-time year month day)
            (time/last-day-of-the-month conf/first-tfsa-year 2))))))
+
+;;;; storage
+
+(defn deposits->saveable [deposits]
+   (->> deposits
+        vals
+        (map (fn [{:keys [person amount day month year note]}]
+               (->> [person year month day amount note]
+                    (map str)
+                    (string/join ","))))
+        (string/join "\r\n")))
+
+
+(def storage-key "tfsa-app-state")
+
+(defn save-state [_ _ e]
+  (when-some [storage js/localStorage]
+    (.setItem storage
+              storage-key
+              (deposits->saveable e))))

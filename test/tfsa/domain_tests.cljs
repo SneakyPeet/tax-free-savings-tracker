@@ -54,7 +54,7 @@
                     2 {:person "Piet"}
                     3 {:person "Daan"}}
           expected {3 {:person "Daan"}}]
-      (t/is (= {:state expected} (sut/deposits :person/remove ["Piet"] deposits)))))
+      (t/is (= {:state expected :save-state expected} (sut/deposits :person/remove ["Piet"] deposits)))))
   (t/testing ":deposit/add should add the deposit and calculate the tax year and add the date"
     (let [deposit-id (random-uuid)
           person "Piet"
@@ -64,11 +64,13 @@
                                       :person person
                                       :tax-year 2017
                                       :timestamp (.getTime (time/date-time 2018 1 11)))}]
-      (t/is (= {:state expected} (sut/deposits :deposit/add [deposit-id person deposit] sut/initial-deposits)))))
+      (t/is (= {:state expected :save-state expected}
+               (sut/deposits :deposit/add [deposit-id person deposit] sut/initial-deposits)))))
   (t/testing ":deposit/remove should remove the deposit"
     (let [deposits {"1" {} "2" {} "3" {}}
           expected {"2" {} "3" {}}]
-      (t/is (= {:state expected} (sut/deposits :deposit/remove ["1"] deposits))))))
+      (t/is (= {:state expected :save-state expected}
+               (sut/deposits :deposit/remove ["1"] deposits))))))
 
 
 (t/deftest deposits-for-person
