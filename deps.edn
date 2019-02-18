@@ -2,6 +2,7 @@
         com.bhauman/rebel-readline-cljs {:mvn/version "0.1.4"}
         rum {:mvn/version "0.11.3"}
         org.roman01la/citrus {:mvn/version "3.2.1"}
-        com.andrewmcveigh/cljs-time {:mvn/version "0.5.2"}}
+        com.andrewmcveigh/cljs-time {:mvn/version "0.5.2"}
+        cljsjs/filesaverjs {:mvn/version "1.3.3-0"}}
  :paths ["src" "target" "resources" "test"]
  }

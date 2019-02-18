@@ -6,6 +6,8 @@
 
 (defn save-state-effect-handler [_ _ deposits] (app-state/save-state deposits))
 
+(defn save-file-effect-handler [r _ _] (app-state/save-file (:deposits @r)))
+
 (defn make
   ([]
    (make {}))
@@ -17,8 +19,10 @@
       :people domain/people
       :deposits domain/deposits
       :adding-person? app-state/adding-person?
-      :deposit-details app-state/deposit-details}
-     :effect-handlers {:save-state save-state-effect-handler}})))
+      :deposit-details app-state/deposit-details
+      :save-file app-state/save}
+     :effect-handlers {:save-state save-state-effect-handler
+                       :save-file save-file-effect-handler}})))
 
 
 (defn init [r] (citrus/broadcast-sync! r :init))

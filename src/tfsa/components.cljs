@@ -307,7 +307,8 @@
        [:nav.navbar
         [:div.container
          [:div.navbar-end.has-text-right
-          [:a.navbar-item {:on-click #(js/alert "TODO") :style {:display "inline-block"}}
+          [:a.navbar-item {:on-click #(citrus/dispatch! r :save-file :save)
+                           :style {:display "inline-block"}}
            [:span.icon [:i.fas.fa-save]]]
           [:a.navbar-item {:on-click #(js/alert "TODO") :style {:display "inline-block"}}
            [:span.icon [:i.fas.fa-upload]]]
@@ -334,9 +335,7 @@
      [:div.section
       [:ul
        [:li [:strong "TODO"]]
-       [:li "Save CSV"]
        [:li "LOAD CSV"]
-       [:li "SAVE Local"]
        [:li "Read Me"]
        [:li "Made By"]
        [:li "Disclaimer"]

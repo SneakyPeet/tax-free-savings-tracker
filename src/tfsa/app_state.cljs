@@ -1,9 +1,11 @@
 (ns tfsa.app-state
   (:require [citrus.core :as citrus]
             [cljs-time.core :as time]
+            [cljs-time.format :as time.format]
             [tfsa.config :as conf]
             [clojure.string :as string]
-            [tfsa.domain :as domain]))
+            [tfsa.domain :as domain]
+            [cljsjs.filesaverjs]))
 
 
 ;;;; ADDING PERSON
@@ -77,6 +79,18 @@
              (time/last-day-of-the-month conf/first-tfsa-year 2))
             (<= tax-year current-tax-year))))))
 
+
+;;;; saving
+
+(defmulti save (fn [evt] evt))
+
+(defmethod save :default [_] {:state nil})
+(defmethod save :save [_]
+  {:state nil
+   :save-file nil})
+
+
+;;;; SIDE EFFECTS
 ;;;; storage
 
 (defn deposits->saveable [deposits]
@@ -129,3 +143,14 @@
         (saveable->state item)
         {}))
     {}))
+
+
+;; file storage
+
+(defn save-file [deposits]
+  (let [file-name (str "TFSA-Tracker-" (time.format/unparse (time.format/formatter "yyyyMMdd") (time/now)) ".csv")
+        content (deposits->saveable deposits)
+        name (clj->js [content])
+        type (clj->js {:type "text/plain;charset=utf-8"})
+        blob (js/Blob. name type)]
+    (js/saveAs blob file-name)))
