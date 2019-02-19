@@ -4,6 +4,8 @@ Tracks South African Tax Free Savings Account Contribuitions, to ensure you stay
 
 https://sneakycode.net/tfsa-tracker
 
+![](https://raw.githubusercontent.com/SneakyPeet/tax-free-savings-tracker/master/example.png?sanitize=true&raw=true)
+
 ### Built using
 
 * [clojurescript](https://clojurescript.org/)
