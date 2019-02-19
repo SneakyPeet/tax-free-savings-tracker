@@ -289,7 +289,7 @@
       single-deposit?
       [:div.notification.is-info.has-text-centered
        [:h1.title "Good Job"]
-       [:h2.subtitle "Remember to add all the deposits you have made to all your tax free saving accounts"]]
+       [:h2.subtitle "Remember to add all the deposits you have made to all your tax free saving accounts. You can add contributions for your family members by clicking the "  [:i.fas.fa-plus] ". Click the " [:i.fas.fa-question-circle] " for more info."]]
       :else nil)))
 
 
@@ -332,6 +332,15 @@
        [:p.modal-card-title "Welcome to TFSA Tracker"]
        [:button.delete {:aria-label "close" :on-click #(citrus/dispatch! r :help :hide)}]]
       [:section.modal-card-body
+       [:p "TFSA Tracker exists to help track contributions to your South African Tax Free Savings Accounts, so you can maximize your savings while staying within the TFSA contribution limits."]
+       [:br]
+       [:p "TFSA Tracker " [:strong "DOES NOT"] " store any of your data, nor does it send it over the internet. Your data is only stored locally in the browser you are using. You can always clear the data kept in your browser by clicking the " [:em "'Clear My Data'"] " button below."]
+       [:br]
+       [:p "It is a good idea to make regular backups of your data using the "  [:i.fas.fa-save] " button. You can always reload a backup by using the " [:i.fas.fa-upload] " button."]
+       [:br]
+       [:p "TFSA Tracker is in essence just a fancy calculator. Thus, the creator of TFSA calculator cannot be held responsible for any losses due to incorrect data entry."]
+       [:br]
+       [:p "TFSA Tracker is built and maintained by " [:a {:href "https://sneakycode.net"} "Pieter Koornhof"] ". Source code is available on " [:a {:href "https://github.com/SneakyPeet/tax-free-savings-tracker"} "github"] "."]
        ]
       [:footer.modal-card-foot
        [:button.button.is-danger
@@ -372,12 +381,4 @@
        (when deposits? (DepositTableContainer r deposits))
        (when (> (count people) 1) (RemovePersonContainer r))
        (Help r)]]
-     [:div.section
-      [:ul
-       [:li [:strong "TODO"]]
-       [:li "Read Me"]
-       [:li "Made By"]
-       [:li "Disclaimer"]
-       [:li "Turn appstate on and off clearning and saving as you switch"]
-       [:li "Deploy"]
-       [:li "Add GA events"]]]]))
+     ]))
