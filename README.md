@@ -2,7 +2,7 @@
 
 Tracks South African Tax Free Savings Account Contribuitions, to ensure you stay within the allowed limits.
 
-https://sneakypeet.github.io/tax-free-savings-tracker/
+https://sneakycode.net/tfsa-tracker
 
 ### Built using
 
