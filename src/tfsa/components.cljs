@@ -5,7 +5,9 @@
             [tfsa.domain :as domain]
             [tfsa.config :as conf]
             [cljs-time.core :as time]
-            [goog.string :as gstring]))
+            [goog.string :as gstring])
+  (:require-macros
+   [devcards.core :refer [defcard]]))
 
 
 (defn currency [n] (str "R" (.toLocaleString n)))
@@ -291,6 +293,21 @@
        [:h1.title "Good Job"]
        [:h2.subtitle "Remember to add all the deposits you have made to all your tax free saving accounts. You can add contributions for your family members by clicking the "  [:i.fas.fa-plus] ". Click the " [:i.fas.fa-question-circle] " for more info."]]
       :else nil)))
+
+(defcard "# Welcome Message
+The welcome message should changed based on the amount of people and deposits")
+
+(defcard "Welcome a new person"
+  (welcome-message #{"Jannie"} "Jannie" {}))
+
+(defcard "Guide a new person after making a deposit"
+  (welcome-message #{"Jannie"} "Jannie" {1 {}}))
+
+(defcard "Hidden after multiple deposits"
+  (welcome-message #{"Jannie"} "Jannie" {1 {} 2 {}}))
+
+(defcard "Guide a second person"
+  (welcome-message #{"Piet" "Jan"} "Piet" {}))
 
 
 (defn read-file [r e]

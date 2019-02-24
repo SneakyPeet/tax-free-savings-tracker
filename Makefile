@@ -8,6 +8,9 @@ help:
 dev:
 	clojure -m figwheel.main --build dev --repl
 
+devcards:
+	clojure -m figwheel.main --build devcards --repl
+
 clean:
 	rm -rf target
 
