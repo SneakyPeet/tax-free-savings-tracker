@@ -125,7 +125,7 @@
         year (time/year now)
         month (time/month now)
         year (if (> month 2) (inc year) year)
-        last-day (time/last-day-of-the-month year month)
+        last-day (time/plus (time/last-day-of-the-month year 2) (time/days 1) (time/millis -1))
         interval (time/interval now last-day)]
     {:ends-in-days (time/in-days interval)
      :end-date last-day
