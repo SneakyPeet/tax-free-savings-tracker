@@ -8,7 +8,10 @@
 (def tax-year-limits
   (merge
    {2015 30000
-    2016 30000}
-   (->> (range 2017 (+ 2 (time/year (time/now))))
-        (map #(hash-map % 33000))
+    2016 30000
+    2017 33000
+    2018 33000
+    2019 33000}
+   (->> (range 2021 (+ 2 (time/year (time/now))))
+        (map #(hash-map % 36000))
         (into {}))))
